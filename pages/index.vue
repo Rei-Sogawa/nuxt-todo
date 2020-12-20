@@ -1,63 +1,136 @@
 <template>
-  <div class="container">
-    <div>
-      <Logo />
-      <h1 class="title">nuxt-todo</h1>
-      <div class="links">
-        <a
-          href="https://nuxtjs.org/"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="button--green"
-        >
-          Documentation
-        </a>
-        <a
-          href="https://github.com/nuxt/nuxt.js"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="button--grey"
-        >
-          GitHub
-        </a>
+  <b-container class="todo-app-page">
+    <h1 class="text-center">Todos</h1>
+
+    <b-form @submit.prevent="onSubmitNewTodo">
+      <b-form-input
+        v-model="newTodoTitle"
+        type="text"
+        placeholder="Add new todo"
+      />
+    </b-form>
+    <br />
+
+    <b-list-group>
+      <div v-for="todo in todos" :key="todo.id">
+        <b-list-group-item v-if="!isTodoBeingEdited(todo)" class="mb-1">
+          <b-form-checkbox
+            :checked="todo.completed"
+            class="d-inline-block"
+            @input="onToggleCompleted($event, todo)"
+          />
+          <span :class="{ 'completed-todo': todo.completed }">{{
+            todo.title
+          }}</span>
+          <span class="float-right">
+            <b-icon
+              icon="pencil-square"
+              class="pencil-icon"
+              shift-v="-2"
+              @click="onClickEdit(todo)"
+            />
+            <b-icon
+              icon="trash"
+              class="trash-icon"
+              shift-v="-2"
+              @click="onClickRemove(todo)"
+            />
+          </span>
+        </b-list-group-item>
+        <b-form v-else class="mb-1" @submit.prevent="onSubmitUpdateTodo">
+          <b-form-input
+            id="edit-todo-form"
+            v-model="todoBeingEdited.title"
+            type="text"
+            class="px-5 py-4"
+            @blur.native="todoBeingEdited = null"
+          />
+        </b-form>
       </div>
-    </div>
-  </div>
+    </b-list-group>
+  </b-container>
 </template>
 
 <script>
-export default {}
+import { mapGetters, mapActions } from 'vuex'
+
+export default {
+  data() {
+    return {
+      newTodoTitle: '',
+      todoBeingEdited: null,
+    }
+  },
+  computed: {
+    ...mapGetters('todos-store', ['todos']),
+  },
+  async created() {
+    await this.fetchTodos()
+  },
+  methods: {
+    ...mapActions('todos-store', [
+      'fetchTodos',
+      'createTodo',
+      'updateTodo',
+      'removeTodo',
+    ]),
+    isTodoBeingEdited(todo) {
+      return this.todoBeingEdited && this.todoBeingEdited.id === todo.id
+    },
+    async onSubmitNewTodo() {
+      const trimmedNewTodoTitle = this.newTodoTitle.trim()
+      if (!trimmedNewTodoTitle) {
+        return
+      }
+      await this.createTodo({
+        title: trimmedNewTodoTitle,
+        completed: false,
+      })
+      this.newTodoTitle = ''
+    },
+    async onToggleCompleted(checked, todo) {
+      await this.updateTodo({
+        id: todo.id,
+        title: todo.title,
+        completed: checked,
+      })
+    },
+    onClickEdit(todo) {
+      this.todoBeingEdited = { ...todo }
+      this.$nextTick(() => {
+        document.getElementById('edit-todo-form').focus()
+      })
+    },
+    async onClickRemove(todo) {
+      await this.removeTodo({ id: todo.id })
+    },
+    async onSubmitUpdateTodo() {
+      const trimmedEditedTodoTitle = this.todoBeingEdited.title.trim()
+      if (!trimmedEditedTodoTitle) {
+        return
+      }
+      await this.updateTodo({
+        id: this.todoBeingEdited.id,
+        title: trimmedEditedTodoTitle,
+        completed: this.todoBeingEdited.completed,
+      })
+      this.todoBeingEdited = null
+    },
+  },
+}
 </script>
 
-<style>
-.container {
-  margin: 0 auto;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
+<style scoped>
+.todo-app-page {
+  width: 480px;
 }
-
-.title {
-  font-family: 'Quicksand', 'Source Sans Pro', -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  display: block;
-  font-weight: 300;
-  font-size: 100px;
-  color: #35495e;
-  letter-spacing: 1px;
+.pencil-icon {
+  cursor: pointer;
 }
-
-.subtitle {
-  font-weight: 300;
-  font-size: 42px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
+.trash-icon {
+  cursor: pointer;
 }
-
-.links {
-  padding-top: 15px;
+.completed-todo {
+  text-decoration: line-through;
 }
 </style>
