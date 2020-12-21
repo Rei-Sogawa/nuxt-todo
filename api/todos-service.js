@@ -22,10 +22,12 @@ const postTodo = async ({ title, completed }) => {
 
 const putTodo = async ({ id, title, completed }) => {
   const todos = await getTodos()
-  const updatedTodo = Object.assign(
-    todos.find((todo) => todo.id === id),
-    { title, completed, updatedAt: Date.now() }
-  )
+  const updatedTodo = {
+    ...todos.find((todo) => todo.id === id),
+    title,
+    completed,
+    updatedAt: Date.now(),
+  }
   localStorage.setItem(
     'todos',
     JSON.stringify(todos.map((todo) => (todo.id === id ? updatedTodo : todo)))

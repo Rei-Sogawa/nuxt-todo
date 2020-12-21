@@ -4,7 +4,7 @@
 
     <b-form @submit.prevent="onSubmitNewTodo">
       <b-form-input
-        v-model="newTodoTitle"
+        v-model.trim="newTodoTitle"
         type="text"
         placeholder="Add new todo"
       />
@@ -40,10 +40,10 @@
         <b-form v-else class="mb-1" @submit.prevent="onSubmitUpdateTodo">
           <b-form-input
             id="edit-todo-form"
-            v-model="todoBeingEdited.title"
+            v-model.trim="todoBeingEdited.title"
             type="text"
             class="px-5 py-4"
-            @blur.native="todoBeingEdited = null"
+            @blur="todoBeingEdited = null"
           />
         </b-form>
       </div>
@@ -55,18 +55,23 @@
 import { mapGetters, mapActions } from 'vuex'
 
 export default {
+  name: 'Index',
+
   data() {
     return {
       newTodoTitle: '',
       todoBeingEdited: null,
     }
   },
+
   computed: {
     ...mapGetters('todos-store', ['todos']),
   },
+
   async created() {
     await this.fetchTodos()
   },
+
   methods: {
     ...mapActions('todos-store', [
       'fetchTodos',
@@ -74,20 +79,22 @@ export default {
       'updateTodo',
       'removeTodo',
     ]),
+
     isTodoBeingEdited(todo) {
       return this.todoBeingEdited && this.todoBeingEdited.id === todo.id
     },
+
     async onSubmitNewTodo() {
-      const trimmedNewTodoTitle = this.newTodoTitle.trim()
-      if (!trimmedNewTodoTitle) {
+      if (!this.newTodoTitle) {
         return
       }
       await this.createTodo({
-        title: trimmedNewTodoTitle,
+        title: this.newTodoTitle,
         completed: false,
       })
       this.newTodoTitle = ''
     },
+
     async onToggleCompleted(checked, todo) {
       await this.updateTodo({
         id: todo.id,
@@ -95,23 +102,25 @@ export default {
         completed: checked,
       })
     },
+
     onClickEdit(todo) {
       this.todoBeingEdited = { ...todo }
       this.$nextTick(() => {
         document.getElementById('edit-todo-form').focus()
       })
     },
+
     async onClickRemove(todo) {
       await this.removeTodo({ id: todo.id })
     },
+
     async onSubmitUpdateTodo() {
-      const trimmedEditedTodoTitle = this.todoBeingEdited.title.trim()
-      if (!trimmedEditedTodoTitle) {
+      if (!this.todoBeingEdited.title) {
         return
       }
       await this.updateTodo({
         id: this.todoBeingEdited.id,
-        title: trimmedEditedTodoTitle,
+        title: this.todoBeingEdited.title,
         completed: this.todoBeingEdited.completed,
       })
       this.todoBeingEdited = null

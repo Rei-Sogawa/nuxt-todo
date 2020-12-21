@@ -19,17 +19,20 @@ const actions = {
     const todos = await todosService.getTodos()
     context.commit('SET_TODOS', todos)
   },
+
   createTodo: async (context, { title, completed }) => {
     await todosService.postTodo({ title, completed })
-    return context.dispatch('fetchTodos')
+    await context.dispatch('fetchTodos')
   },
+
   updateTodo: async (context, { id, title, completed }) => {
     await todosService.putTodo({ id, title, completed })
-    return context.dispatch('fetchTodos')
+    await context.dispatch('fetchTodos')
   },
+
   removeTodo: async (context, { id }) => {
     await todosService.deleteTodo({ id })
-    return context.dispatch('fetchTodos')
+    await context.dispatch('fetchTodos')
   },
 }
 
