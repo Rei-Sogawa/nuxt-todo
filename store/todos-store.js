@@ -1,4 +1,4 @@
-import * as todosService from '@/api/todos-service'
+import * as TodosService from '@/api/todos-service'
 
 const state = () => ({
   storedTodos: [],
@@ -16,22 +16,22 @@ const mutations = {
 
 const actions = {
   fetchTodos: async (context) => {
-    const todos = await todosService.getTodos()
+    const todos = await TodosService.getTodos()
     context.commit('SET_TODOS', todos)
   },
 
   createTodo: async (context, { title, completed }) => {
-    await todosService.postTodo({ title, completed })
+    await TodosService.postTodo({ title, completed })
     await context.dispatch('fetchTodos')
   },
 
   updateTodo: async (context, { id, title, completed }) => {
-    await todosService.putTodo({ id, title, completed })
+    await TodosService.putTodo({ id, title, completed })
     await context.dispatch('fetchTodos')
   },
 
   removeTodo: async (context, { id }) => {
-    await todosService.deleteTodo({ id })
+    await TodosService.deleteTodo({ id })
     await context.dispatch('fetchTodos')
   },
 }
